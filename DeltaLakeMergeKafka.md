@@ -10,7 +10,8 @@ Customer (Cx) approached us to build a near real-time data pipeline that is able
 
 ## High Level Architecture Diagram
 
-![image.png](/.attachments/image-cf09579a-f957-4530-9409-ef330fc920fb.png)
+![image.png](DeltaLakeMergeKafka.png)
+
 
 **Commentary:**
 
