@@ -12,7 +12,7 @@ Trino is a distributed SQL query engine designed to query large data sets distri
 ### High Level Architecture Diagram
 
 
-![image.png](/.attachments/image-3a3b61d1-d8d2-45b8-a802-2d8829700d57.png)
+![image.png](/.TrinoAKS.png)
 
 ## Section I: Setting up the Infrastructure 
 
