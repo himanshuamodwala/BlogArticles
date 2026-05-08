@@ -1,9 +1,5 @@
 # Trino on Azure Kubernetes Services with Private Endpoints
-**Author**: Himanshu Amodwala (hiamodwala@microsoft.com)
-
-[[_TOC_]]
-
-This tutorial provides steps for using the Azure portal to setup Trino on Azure Kubernetes Services using Private Endpoints.
+**Author**: Himanshu Amodwala
 
 ### Problem Context
 
