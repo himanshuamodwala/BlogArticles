@@ -35,7 +35,7 @@ Trino is hosted on AKS ([article]()) to provide the data analysts SQL Interface 
 
 Historical Data Load: Cx Loaded all the Historical Data (approx. 7 Bn records) in Delta Format on ADLS Gen 2 using Parquet dumps extracted from their on-premises systems and Synapse Spark Notebooks.
 
-![image.png](/.attachments/image-9b75b3d5-c0ed-4e8c-8bf3-21d08927bf68.png)
+![image.png](DeltaLakeMergeKafka1.png)
 
 <p align=center> Note: Code Snippets are for illustration purposes
 
