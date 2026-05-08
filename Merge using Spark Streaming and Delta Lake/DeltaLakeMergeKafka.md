@@ -1,8 +1,6 @@
 # Delta Lake Merge Optimizations on Structured Streaming
 
-**Author**: Himanshu Amodwala (hiamodwala@microsoft.com)
-
-[[_TOC_]]
+**Author**: Himanshu Amodwala
 
 ## Problem Context
 
