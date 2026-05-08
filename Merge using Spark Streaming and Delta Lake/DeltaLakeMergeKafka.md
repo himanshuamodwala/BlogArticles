@@ -41,11 +41,11 @@ Historical Data Load: Cx Loaded all the Historical Data (approx. 7 Bn records) i
 
 Data Processing: Data from On-Premises Kafka Topic is read by Synapse Spark Pools using Spark Structured Streaming and merged with Historical Delta Table sitting on ADLS Bronze layer during every Micro-batch.
 
-![image.png](/.attachments/image-ed656234-2441-46d0-972c-2b3153e3c883.png)
+![image.png](DeltaLakeMergeKafka2.png)
 
-![image.png](/.attachments/image-43d6282b-6d30-492e-91b3-55a559dc7d5e.png)
+![image.png](DeltaLakeMergeKafka3.png)
 
-![image.png](/.attachments/image-b00a3959-8252-401c-b85e-ee1f3396fe69.png)
+![image.png](DeltaLakeMergeKafka4.png)
 
 <p align=center> Note: Code Snippets are for illustration purposes
 
@@ -83,19 +83,19 @@ _Main Delta Table Optimizations:_ The Historical Data Delta Table that was creat
 
 _Data Partitioning_: Based on the above selection criteria and extensive discussion with the Business Teams, we picked 2 columns for partitioning the data, ColumnA and ColumnB (names redacted to protect identity) which are frequently used as query predicates and has a cardinality of about 40,000 and 10,000 respectively (Given the volume of Data i.e., approx. 7 Bn records it justifies the cardinality numbers). 
 
-![image.png](/.attachments/image-ef47e63a-d318-48e9-8dbc-8702646108c2.png)
+![image.png](DeltaLakeMergeKafka5.png)
 <p align=center> Note: Code Snippets are for illustration purposes
 
 _Delta Optimize_: We also performed an Optimize on the mainDeltaTable and selected another frequently queried column i.e., ColumnC (name redacted to protect identity) with a cardinality of 42 million for ZOrdering to colocate the data. We had to do this on Synapse Spark 3.2 Runtime .
 
-![image.png](/.attachments/image-8951831f-180d-41b9-b017-167461a0efe9.png)
+![image.png](DeltaLakeMergeKafka6.png)
 <p align=center> Note: Code Snippets are for illustration purposes
 
 _Compaction & Vacuum_: Given the volume of the data and the mechanism of capturing incremental data aka. streaming data coming from micro batches, we also setup a separate job running every 12 hours that compacts the smaller parquet files into manageable chunks for faster data reads and vacuums the delta table to keep last 7 days history for time travel.
 
-![image.png](/.attachments/image-dd8c5c34-e588-4af9-885d-f873a08c1464.png)
+![image.png](DeltaLakeMergeKafka7.png)
 
-![image.png](/.attachments/image-93682895-44dd-4411-a5f8-bd270e840838.png)
+![image.png](DeltaLakeMergeKafka8.png)
 
 <p align=center> Note: Code Snippets are for illustration purposes
 
@@ -107,10 +107,10 @@ _Partition Pruning_: Based on our discussions with the developers and stakeholde
 
 _Broadcasting_: In order to reduce the data shuffles between the executors we broadcasted the micro batch dataframe.
 
-![image.png](/.attachments/image-43d6282b-6d30-492e-91b3-55a559dc7d5e.png)
+![image.png](DeltaLakeMergeKafka9.png)
 <p align=center> Pre-Optimization
 
-![image.png](/.attachments/image-31307e34-8206-44b3-a692-6e5b52bf6093.png)
+![image.png](DeltaLakeMergeKafka10.png)
 <p align=center> Post-Optimization
 <p align=center> Note: Code Snippets are for illustration purposes
 
@@ -118,13 +118,13 @@ ReadStream Optimizations:
 
 We also observed that the data coming into the Kafka topic had a variable throughput (spiking significantly during peak business hours). In order to have a better control over the sudden spike in data loads we also added properties of maxOffsetPerTrigger, minOffsetPerTrigger and maxTriggerDelay (documentation [link](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html))
 
-![image.png](/.attachments/image-29628352-7b80-4b3c-af5a-fe7340e0a8e7.png)
+![image.png](DeltaLakeMergeKafka11.png)
 
 Spark Configuration Optimizations:
 
 Since we were broadcasting the micro batch dataframe and as a best practice, it made sense to increase the default value of autoBroadcastJoinThreshold from default 10 MB to 1 GB.
 
-![image.png](/.attachments/image-912032f5-08bf-4d36-a0a2-c36459494692.png)
+![image.png](DeltaLakeMergeKafka12.png)
 
 ### Kafka Optimizations
 
@@ -150,4 +150,4 @@ _ToDo_:
 
 We met the Business SLA for 30 seconds (exactly 30 seconds)
 
-![image.png](/.attachments/image-4fa2ec84-e185-4403-ae14-30ffff275aaa.png)
+![image.png](DeltaLakeMergeKafka13.png)
