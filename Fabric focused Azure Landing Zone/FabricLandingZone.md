@@ -47,6 +47,7 @@ flowchart TB
             IDSUB[Identity Subscription<br/>Entra Connect · PIM]:::platform
             MGMTSUB[Management Subscription<br/>Log Analytics · Defender · Purview · Azure Monitor]:::platform
             CONNSUB[Connectivity Subscription<br/>Hub VNet · Azure Firewall · ExpressRoute/VPN<br/>Private DNS Zones]:::platform
+            SECSUB[Security Subscription<br/>Microsoft Sentinel · Defender for Cloud<br/>Central Key Vault/HSM · Purview]:::platform
         end
 
         subgraph DATAMG["Data & Analytics MG — Azure Policy: region · SKU · Private Link · tags"]
@@ -70,7 +71,7 @@ flowchart TB
 
     subgraph EXT[External & On-Premises]
         direction TB
-        ONPREM[On-Premises Sources<br/>via Data Gateway / Mirroring]:::ext
+        ONPREM[On-Premises Sources & <br/> Multi Cloud <br/>via Data Gateway / Private Link Scope for Fabric Dataflow v2 / Fabric Notebook]:::ext
         DEVOPS[Azure DevOps / GitHub<br/>Git Integration · Deployment Pipelines · Bicep/Terraform]:::ext
         USERS[Business Users · Analysts · Engineers]:::ext
     end
@@ -79,12 +80,12 @@ flowchart TB
     Tenant -. authenticates .-> PRODWS
     Tenant -. SSO + CA .-> USERS
 
-    USERS -->|HTTPS via Private Link| PRODWS
+    USERS -->|HTTPS / Conditional Access| PRODWS
     DEVOPS -->|CI/CD| DEVWS
     DEVOPS -->|Promote| PRODWS
 
-    CONNSUB -->|Private Endpoints<br/>Managed Private Endpoints| PRODCAP
-    CONNSUB -->|Private Endpoints| DEVCAP
+    CONNSUB -->|Private Endpoints<br/>Private Link Scopes| PRODWS
+    CONNSUB -->|Private Endpoints<br/>Private Link Scopes| DEVWS
     ONPREM -->|ExpressRoute / VPN| CONNSUB
 
     PRODWS --> ONELAKE
@@ -93,9 +94,16 @@ flowchart TB
     PRODWS -->|Managed PE| PRODDATA
     DEVWS -->|Managed PE| DEVDATA
 
-    MGMTSUB -. Capacity Metrics · Audit Logs .- PRODCAP
-    MGMTSUB -. Capacity Metrics · Audit Logs .- DEVCAP
-    MGMTSUB -. Purview Scan · DLP · Sensitivity Labels .- ONELAKE
+    MGMTSUB -. Capacity Metrics<br/>Operational Logs .- PRODCAP
+    MGMTSUB -. Capacity Metrics<br/>Operational Logs .- DEVCAP
+
+    SECSUB -. Fabric Audit<br/>Sign-in Logs .- PRODWS
+    SECSUB -. Fabric Audit<br/>Sign-in Logs .- DEVWS
+    SECSUB -. Purview Scan<br/>DLP · Sensitivity Labels .- ONELAKE
+    SECSUB -. Defender Posture<br/>Threat Alerts .- PRODDATA
+    SECSUB -. Defender Posture<br/>Threat Alerts .- DEVDATA
+    SECSUB -. CMK / Encryption .- PRODCAP
+    Tenant -. Entra Sign-in & Audit Logs .-> SECSUB
 ```
 
 ---
