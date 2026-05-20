@@ -20,6 +20,7 @@ In an enterprise-scale design, Fabric typically sits inside a **data platform ap
 |---|---|---|
 | Platform – Identity | Microsoft Entra ID tenant, groups, PIM, Conditional Access | Fabric tenant is bound to the same Entra tenant; users, service principals, and **workspace identities** are issued here |
 | Platform – Connectivity | Hub VNet, ExpressRoute/VPN, Private DNS, Firewall | Hosts Private Endpoints for OneLake, Warehouse SQL, and on-prem data gateway egress |
+| Platform – Security | Microsoft Defender for Cloud, Microsoft Sentinel, Key Vault, Purview, Azure Policy guardrails | Ingests Fabric audit and activity logs into Sentinel; Purview governs OneLake and mirrored sources; AKV stores connection secrets; policies enforce private-link, allowed SKUs, and tag standards |
 | Platform – Management | Log Analytics, Defender for Cloud, Policy | Receives Fabric capacity metrics, Purview audit logs, and DLP alerts |
 | Application LZ – Data | Subscription(s) holding Fabric capacities and adjacent Azure data services | F-SKU capacities, Azure Storage (shortcuts), Azure SQL/Synapse mirrored sources, AKV |
 
@@ -121,11 +122,99 @@ flowchart TB
 - Enable **Private Link at the tenant or workspace level** and turn on *Block Public Internet Access* for sensitive tenants.
 - Use **Managed VNets and Managed Private Endpoints** so that Spark, pipelines, and OneLake reach Azure PaaS sources (ADLS, SQL, Key Vault) without traversing the public internet.
 - Place Private DNS zones for `*.fabric.microsoft.com` and `*.onelake.dfs.fabric.microsoft.com` in the hub.
+- Use the following patterns to have a robust Data Ingestion pattern that supports Low Code (Fabric Dataflow v2) and Pro Code (Fabric Notebooks)
+
+```mermaid
+flowchart LR
+    subgraph Fabric["Microsoft Fabric"]
+        FabricNB["Fabric Notebooks"]
+        FabricSvc["Fabric Service<br/>(Dataflows / Pipelines)"]
+    end
+
+    subgraph PL_Scope["Azure Private Link Scope"]
+        PE["Azure Private Link Scope"]
+    end
+
+    subgraph Azure_VNet["Azure Virtual Network"]
+        subgraph PLS_Subnet["Private Link Service Subnet"]
+            PLS["Azure Private Endpoint"]
+            ILB["Azure Internal Load Balancer"]
+        end
+        subgraph NAT_Subnet["NAT / Proxy Subnet"]
+            Azure_VPN_GCP["Azure VPN Gateway (GCP)"]
+            Azure_VPN_AWS["Azure VPN Gateway (AWS)"]
+            Azure_VPN_OnPrem["Azure VPN Gateway (Kyndryl)"]
+            NAT_VM1["NAT VM 1"]
+            NAT_VM2["NAT VM 2"]
+        end
+        subgraph Subnet["VM Subnet"]
+            GW_VM["Fabric On-Premises<br/>Data Gateway VM"]
+        end
+    end
+
+    subgraph GCP["Google Cloud Platform"]
+        BQ["Google BigQuery"]
+        GCP_VPN["GCP Cloud VPN Gateway"]
+    end
+
+    subgraph AWS["Amazon Web Services"]
+        SF["Snowflake"]
+        AWS_VPN["AWS VPN Gateway"]
+    end
+
+    subgraph OnPrem["Kyndrl Cloud"]
+        DB2["IBM DB2"]
+        OnPrem_VPN["Kyndryl VPN Gateway"]
+    end
+
+    BQ -- "BigQuery API<br/>(Private Google Access)" --> GCP_VPN
+    SF -- "Snowflake API<br/>(PrivateLink / Direct)" --> AWS_VPN
+    DB2 -- "DB2 Connect (TCP/IP)" --> OnPrem_VPN
+
+    GCP_VPN <-- "IPsec Tunnel" --> Azure_VPN_GCP
+    AWS_VPN <-- "IPsec Tunnel" --> Azure_VPN_AWS
+    OnPrem_VPN <-- "IPsec Tunnel" --> Azure_VPN_OnPrem
+
+    Azure_VPN_GCP -- "Routed Traffic" --> GW_VM
+    Azure_VPN_AWS -- "Routed Traffic" --> GW_VM
+    Azure_VPN_OnPrem -- "Routed Traffic" --> GW_VM
+
+    NAT_VM1 -- "VPN Route (GCP)" --> Azure_VPN_GCP
+    NAT_VM2 -- "VPN Route (GCP)" --> Azure_VPN_GCP
+    NAT_VM1 -- "VPN Route (AWS)" --> Azure_VPN_AWS
+    NAT_VM2 -- "VPN Route (AWS)" --> Azure_VPN_AWS
+    NAT_VM1 -- "VPN Route (On-Prem)" --> Azure_VPN_OnPrem
+    NAT_VM2 -- "VPN Route (On-Prem)" --> Azure_VPN_OnPrem
+
+    ILB --> NAT_VM1
+    ILB --> NAT_VM2
+
+    PLS -- "Fronts" --> ILB
+    PE -- "Private Link Connection" --> PLS
+    FabricNB -- "Managed VNet<br/>Private Endpoint Connection" --> PE
+
+    GW_VM -- "Outbound HTTPS<br/>(Gateway Registration)" --> FabricSvc
+    FabricSvc -- "Data Requests" --> GW_VM
+
+    classDef gcp fill:#4285F4,stroke:#2a56c6,color:#fff
+    classDef aws fill:#FF9900,stroke:#cc7a00,color:#fff
+    classDef onprem fill:#2E7D32,stroke:#1b5e20,color:#fff
+    classDef azure fill:#0078D4,stroke:#005a9e,color:#fff
+    classDef fabric fill:#F2C811,stroke:#111,color:#333
+    classDef pls fill:#7B3F99,stroke:#5c2d82,color:#fff
+
+    class BQ,GCP_VPN gcp
+    class SF,AWS_VPN aws
+    class DB2,OnPrem_VPN onprem
+    class Azure_VPN_GCP,Azure_VPN_AWS,Azure_VPN_OnPrem,NAT_VM1,NAT_VM2,GW_VM,ILB azure
+    class FabricNB,FabricSvc fabric
+    class PE,PLS pls
+```
 
 ### 3. Resource organization
 
 - One **management group** for analytics; child subscriptions for *Platform-Shared*, *Dev*, *Test*, and *Prod* Fabric capacities.
-- Capacities act as **isolation and chargeback boundaries** — split them by environment (DTAP) and, where needed, by business domain.
+- Capacities act as **isolation and chargeback boundaries** — split them by environment and, where needed, by business domain.
 
 ### 4. Governance
 
