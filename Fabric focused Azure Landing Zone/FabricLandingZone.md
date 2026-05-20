@@ -120,9 +120,9 @@ flowchart TB
 ### 2. Network topology and connectivity
 
 - Enable **Private Link at the tenant or workspace level** and turn on *Block Public Internet Access* for sensitive tenants.
-- Use **Managed VNets and Managed Private Endpoints** so that Spark, pipelines, and OneLake reach Azure PaaS sources (ADLS, SQL, Key Vault) without traversing the public internet.
+- Use **Managed VNets and Managed Private Endpoints** so that Spark, pipelines, and OneLake reach Azure PaaS sources (ADLS, SQL, Key Vault), Mutli Cloud / Private Cloud Sources like BigQuery, Snowflake, DB2 etc without traversing the public internet.
 - Place Private DNS zones for `*.fabric.microsoft.com` and `*.onelake.dfs.fabric.microsoft.com` in the hub.
-- Use the following patterns to have a robust Data Ingestion pattern that supports Low Code (Fabric Dataflow v2) and Pro Code (Fabric Notebooks)
+- Use the following patterns to have a robust Data Ingestion pattern that works well with Low Code (Fabric Dataflow v2) and Pro Code (Fabric Notebooks) while supporting practically a wide range of Data Sources.
 
 ```mermaid
 flowchart LR
@@ -143,7 +143,7 @@ flowchart LR
         subgraph NAT_Subnet["NAT / Proxy Subnet"]
             Azure_VPN_GCP["Azure VPN Gateway (GCP)"]
             Azure_VPN_AWS["Azure VPN Gateway (AWS)"]
-            Azure_VPN_OnPrem["Azure VPN Gateway (Kyndryl)"]
+            Azure_VPN_OnPrem["Azure VPN Gateway (Private Cloud)"]
             NAT_VM1["NAT VM 1"]
             NAT_VM2["NAT VM 2"]
         end
@@ -154,17 +154,17 @@ flowchart LR
 
     subgraph GCP["Google Cloud Platform"]
         BQ["Google BigQuery"]
-        GCP_VPN["GCP Cloud VPN Gateway"]
+        GCP_VPN["GCP VPN Gateway"]
     end
 
     subgraph AWS["Amazon Web Services"]
-        SF["Snowflake"]
+        SF["AWS Snowflake"]
         AWS_VPN["AWS VPN Gateway"]
     end
 
-    subgraph OnPrem["Kyndrl Cloud"]
+    subgraph OnPrem["Private Cloud"]
         DB2["IBM DB2"]
-        OnPrem_VPN["Kyndryl VPN Gateway"]
+        OnPrem_VPN["Private Cloud VPN Gateway"]
     end
 
     BQ -- "BigQuery API<br/>(Private Google Access)" --> GCP_VPN
@@ -191,7 +191,7 @@ flowchart LR
 
     PLS -- "Fronts" --> ILB
     PE -- "Private Link Connection" --> PLS
-    FabricNB -- "Managed VNet<br/>Private Endpoint Connection" --> PE
+    FabricNB -- "Managed VNet<br/>Private Link Scope Connection" --> PE
 
     GW_VM -- "Outbound HTTPS<br/>(Gateway Registration)" --> FabricSvc
     FabricSvc -- "Data Requests" --> GW_VM
