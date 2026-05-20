@@ -123,6 +123,7 @@ flowchart TB
 - Use **Managed VNets and Managed Private Endpoints** so that Spark, pipelines, and OneLake reach Azure PaaS sources (ADLS, SQL, Key Vault), Mutli Cloud / Private Cloud Sources like BigQuery, Snowflake, DB2 etc without traversing the public internet.
 - Place Private DNS zones for `*.fabric.microsoft.com` and `*.onelake.dfs.fabric.microsoft.com` in the hub.
 - Use the following patterns to have a robust Data Ingestion pattern that works well with Low Code (Fabric Dataflow v2) and Pro Code (Fabric Notebooks) while supporting practically a wide range of Data Sources.
+- Combine the documentations [here](https://learn.microsoft.com/en-us/fabric/security/connect-to-on-premise-sources-using-managed-private-endpoints) and [here](https://learn.microsoft.com/en-us/azure/data-factory/tutorial-managed-virtual-network-on-premise-sql-server) to setup the topology described below for Fabric Notebooks. Use the documentation [here](https://learn.microsoft.com/en-us/fabric/data-factory/connector-odbc#connect-to-an-odbc-data-source) to setup the topology described below for Fabric Dataflow v2.
 
 ```mermaid
 flowchart LR
