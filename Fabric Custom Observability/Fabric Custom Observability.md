@@ -117,14 +117,14 @@ TABLE = "obs_run_metrics"
       .saveAsTable(TABLE))
 
 # --- Schema-enabled Lakehouse (preview) ----------------------------------
-# LAKEHOUSE = "ObservabilityLakehouse"
-# spark.sql(f"CREATE SCHEMA IF NOT EXISTS {LAKEHOUSE}.obs")
-# TABLE = f"{LAKEHOUSE}.obs.run_metrics"
-# (spark.createDataFrame([], obs_schema)
-#       .write.format("delta")
-#       .partitionBy("item_type")
-#       .mode("ignore")
-#       .saveAsTable(TABLE))
+LAKEHOUSE = "ObservabilityLakehouse"
+spark.sql(f"CREATE SCHEMA IF NOT EXISTS {LAKEHOUSE}.obs")
+TABLE = f"{LAKEHOUSE}.obs.run_metrics"
+(spark.createDataFrame([], obs_schema)
+      .write.format("delta")
+      .partitionBy("item_type")
+      .mode("ignore")
+      .saveAsTable(TABLE))
 ```
 
 If you try the open-source idiom `CREATE SCHEMA IF NOT EXISTS obs` against the default catalog, Fabric will reject it with:
