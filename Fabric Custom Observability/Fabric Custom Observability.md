@@ -1,6 +1,6 @@
 # Custom Observability for Microsoft Fabric Notebooks and Copy Data Activities
 
-This Blog is still a Work In Progress
+```IMPORTANT This Blog is still a Work In Progress```
 
 ## Problem Context
 
